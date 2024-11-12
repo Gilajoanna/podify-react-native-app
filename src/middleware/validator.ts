@@ -2,6 +2,8 @@
 import { RequestHandler } from "express";
 import * as yup from "yup";
 
+// Middleware for validating the request body
+
 export const validate = (schema: any): RequestHandler => {
   return async (req, res, next) => {
     if (!req.body) return res.status(400).json({ error: "Empty body is not excepted!" });

@@ -1,7 +1,8 @@
 import { validate } from "@/middleware/validator";
-import { CreateUserSchema, EmailVerificationBody } from "@/utils/validationSchema";
-import { create, sendReVerificationToken, verifyEmail } from "@/controllers/userController";
+import { CreateUserSchema, TokenAndIDValidation } from "@/utils/validationSchema";
+import { create, generateForgetPasswordLink, grantValid, sendReVerificationToken, verifyEmail } from "@/controllers/userController";
 import { Router } from "express";
+import { isValidPassWordResetToken } from "@/middleware/auth";
 
 const router = Router();
 
@@ -12,11 +13,22 @@ router.post(
 );
 
 router.post("/verify-email", 
-validate(EmailVerificationBody), 
-verifyEmail);
+validate(TokenAndIDValidation), 
+verifyEmail
+);
 
 router.post("/re-verify-email", 
-validate(EmailVerificationBody), 
-sendReVerificationToken);
+sendReVerificationToken
+);
+
+router.post("/forget-password", 
+generateForgetPasswordLink
+);
+
+router.post("/verify-password-reset-token", 
+validate(TokenAndIDValidation),
+isValidPassWordResetToken,
+grantValid
+);
 
 export default router;

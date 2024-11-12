@@ -2,11 +2,15 @@ import { CreateUser, VerifyEmailRequest } from "@/@types/userType";
 import { RequestHandler } from "express";
 import User from "@/models/user";
 import { generateToken } from "@/utils/helper";
-import { sendVerificationEmail } from "@/utils/mail";
+import { sendForgetPasswordLink, sendVerificationEmail } from "@/utils/mail";
 import EmailVerificationToken from "@/models/emailVerificationToken";
+import PasswordResetToken from "@/models/passwordResetToken";
 import { isValidObjectId } from "mongoose";
+import crypto from "crypto";
+import { PASSWORD_RESET_LINK } from "@/utils/variables";
 
 /***** CREATE USER *****/
+
 export const create: RequestHandler =   
 async (req: CreateUser, res) => {
   const { email, password, name } = req.body;
@@ -55,7 +59,7 @@ async (req: VerifyEmailRequest, res) => {
   res.json({ message: "Email verified" });
 }
 
-/***** RE-SEND TOKEN *****/ // THIS IS NOT WORKING IN POSTMAN. Check later on
+/***** RE-SEND TOKEN WHEN TOKEN EXPIRED *****/
 
 export const sendReVerificationToken: RequestHandler =   
 async (req, res) => {
@@ -85,4 +89,37 @@ async (req, res) => {
   });
 
   res.json({ message: "Token is re-sent." });
+};
+
+/***** FORGET PASSWORD *****/
+
+export const generateForgetPasswordLink: RequestHandler = async (req, res) => {
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+  if (!user) {
+    return res.status(404).json({ message: "Account not found." });
+  };
+
+  // We always have to delete existing tokens before creating a new one.
+  await PasswordResetToken.findOneAndDelete({
+    owner: user._id
+  });
+ 
+  // Generate token
+  const token = crypto.randomBytes(32).toString("hex");
+  PasswordResetToken.create({
+    owner: user._id,
+    token
+  });
+  // Generate link
+  const resetLink = `${PASSWORD_RESET_LINK}?token=${token}&userId=${user._id}`;
+  
+  sendForgetPasswordLink({ email: user.email, link: resetLink });
+  res.json({ message: "Reset link is sent to your mail.", resetLink });
+};
+
+/***** VERIFY PASSWORD RESET TOKEN FOR RE-SENDING PASSWORD LINK *****/
+
+export const grantValid: RequestHandler = async (req, res) => {
+  res.json({ message: "Token is valid." });
 };
