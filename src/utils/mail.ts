@@ -2,8 +2,6 @@
 import EmailVerificationToken from "@/models/emailVerificationToken";
 import nodemailer from "nodemailer";
 import { MAILTRAP_PASS, MAILTRAP_USER, VERIFICATION_EMAIL } from "@/utils/variables";
-import { generateToken } from "@/utils/helper";
-import User from "@/models/user";
 
 const generateMailTransport = () => {
     return nodemailer.createTransport({
@@ -24,12 +22,7 @@ interface Profile {
 
 export const sendVerificationEmail = async (token: string, profile: Profile) => {
     const transport = generateMailTransport();
-    const {email, name, userId} = profile;
-
-    await EmailVerificationToken.create({ 
-        owner: userId, 
-        token 
-    });
+    const {email, name} = profile;
 
     transport.sendMail({
         to: email,
