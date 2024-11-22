@@ -14,3 +14,10 @@ export interface VerifyEmailRequest extends Request {
     token: string;
   };
 }
+
+export interface UpDdatePassword extends Request {
+  body: {
+    userId: string;
+    password: string;
+  };
+}
